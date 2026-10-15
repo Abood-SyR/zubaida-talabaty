@@ -20,7 +20,16 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
-  <!-- الطريقة الحديثة والقياسية لتشغيل فلاتر وتفعيل PWA تلقائياً -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('firebase-messaging-sw.js').catch(function (err) {
+          console.warn('Service Worker registration failed: ', err);
+        });
+      });
+    }
+  </script>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
