@@ -18,7 +18,11 @@ class QRScannerScreen extends StatefulWidget {
 class _QRScannerScreenState extends State<QRScannerScreen> {
   bool _isProcessing = false;
   bool _isCameraActive = false;
-  final MobileScannerController _scannerController = MobileScannerController(autoStart: false);
+  
+  // تعريف وحدة التحكم بشكل آمن تماماً للويب والهواتف
+  final MobileScannerController _scannerController = MobileScannerController(
+    autoStart: false,
+  );
 
   @override
   void dispose() {
