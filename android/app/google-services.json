@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "449428973708",
+    "firebase_url": "https://zubaida-beauty-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "zubaida-beauty",
+    "storage_bucket": "zubaida-beauty.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:449428973708:android:3ebcaf0aa24ebdff1e33a9",
+        "android_client_info": {
+          "package_name": "com.reson.talabaty"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-QLqSGKQ0TmCF0CwCXsHdTM527PakcF0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
