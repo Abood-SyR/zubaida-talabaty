@@ -1,7 +1,8 @@
 // ============================================================
-// notification_service.dart (نسخة كاملة مع معالجة order_id بدقة)
+// notification_service.dart (النسخة الكاملة والمصححة للويب والهواتف)
 // ============================================================
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -31,29 +32,39 @@ class NotificationService {
     if (_isInitialized) return;
     _isInitialized = true;
 
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+    // على الويب، لا ندعم تهيئة إشعارات الأندرويد المحلية لتجنب الانهيار على Safari
+    if (!kIsWeb) {
+      const AndroidInitializationSettings initializationSettingsAndroid =
+          AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    const InitializationSettings initializationSettings =
-        InitializationSettings(android: initializationSettingsAndroid);
+      const InitializationSettings initializationSettings =
+          InitializationSettings(android: initializationSettingsAndroid);
 
-    await _localNotificationsPlugin.initialize(
-      initializationSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse response) {
-        _handleNotificationClick(response.payload);
-      },
-    );
+      await _localNotificationsPlugin.initialize(
+        initializationSettings,
+        onDidReceiveNotificationResponse: (NotificationResponse response) {
+          _handleNotificationClick(response.payload);
+        },
+      );
 
-    await _localNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(_channel);
+      await _localNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(_channel);
+    } else {
+      // تهيئة بسيطة للويب إن وجدت أو تخطي
+      const InitializationSettings initializationSettings =
+          InitializationSettings();
+      await _localNotificationsPlugin.initialize(initializationSettings);
+    }
 
-    await FirebaseMessaging.instance.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+    try {
+      await FirebaseMessaging.instance.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+    } catch (_) {}
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       final String? orderId = message.data['order_id']?.toString() ?? message.data['id']?.toString();
@@ -62,7 +73,6 @@ class NotificationService {
     });
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-      // استخراج معرّف الطلب الحقيقي من بيانات السيرفر أو استخدام بديل زمني فريد
       final String? orderId = message.data['order_id']?.toString() ?? message.data['id']?.toString();
       final String msgId = orderId ?? message.messageId ?? 'order_general_${DateTime.now().millisecondsSinceEpoch}';
 
@@ -113,30 +123,31 @@ class NotificationService {
         ),
       );
 
-      _localNotificationsPlugin.show(
-        msgId.hashCode,
-        title,
-        body,
-        NotificationDetails(
-          android: AndroidNotificationDetails(
-            _channel.id,
-            _channel.name,
-            channelDescription: _channel.description,
-            importance: Importance.max,
-            priority: Priority.high,
-            icon: '@mipmap/ic_launcher',
+      // إظهار الإشعار المحلي فقط على الأنظمة المدعومة (غير الويب)
+      if (!kIsWeb) {
+        _localNotificationsPlugin.show(
+          msgId.hashCode,
+          title,
+          body,
+          NotificationDetails(
+            android: AndroidNotificationDetails(
+              _channel.id,
+              _channel.name,
+              channelDescription: _channel.description,
+              importance: Importance.max,
+              priority: Priority.high,
+              icon: '@mipmap/ic_launcher',
+            ),
           ),
-        ),
-        payload: msgId,
-      );
+          payload: msgId,
+        );
+      }
     }); 
   }
 
-  // دالة التعامل مع النقر وجلب بيانات الطلب ثم الانتقال لصفحة التفاصيل مباشرة
   static void _handleNotificationClick(String? notificationId) async {
     if (navigatorKey.currentState != null && notificationId != null) {
       try {
-        // إظهار مؤشر تحميل بسيط إذا أردت أو جلب الطلب مباشرة عبر API
         final Dio dio = await SessionService.getDioClient();
         final response = await dio.get('/orders/$notificationId');
 
@@ -150,7 +161,6 @@ class NotificationService {
           );
         }
       } catch (e) {
-        // إذا حدث خطأ في جلب تفاصيل الطلب، نقوم بتحويله لشاشة قائمة الطلبات كخيار احتياطي
         navigatorKey.currentState!.push(
           MaterialPageRoute(
             builder: (context) => OrdersTabScreen(
