@@ -1,5 +1,5 @@
 // ============================================================
-// main.dart (النسخة الكاملة والمصححة)
+// main.dart (النسخة الكاملة والمصححة للويب والهواتف)
 // ============================================================
 // ignore_for_file: unused_element
 
@@ -45,6 +45,9 @@ void main() async {
 }
 
 void _initGlobalAutoSunMode() {
+  // حساس الإضاءة غير مدعوم على الويب، لذا نتخطاه لمنع الانهيار على Safari
+  if (kIsWeb) return;
+
   SharedPreferences.getInstance().then((prefs) {
     bool isAutoEnabled = prefs.getBool('auto_sun_mode') ?? false;
     if (isAutoEnabled) {
