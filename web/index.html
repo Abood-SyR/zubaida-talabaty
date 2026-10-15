@@ -31,14 +31,15 @@
       var consoleDiv = document.getElementById('error-console');
       var textP = document.getElementById('error-text');
       consoleDiv.style.display = 'block';
-      textP.textContent += '\n[Error]: ' + event.message + '\nAt: ' + event.filename + ':' + event.lineno;
+      var details = event.error ? (event.error.stack || event.error.message) : event.message;
+      textP.textContent += '\n\n[Full Error]: ' + details + '\nAt: ' + event.filename + ':' + event.lineno;
     });
 
     window.addEventListener('unhandledrejection', function (event) {
       var consoleDiv = document.getElementById('error-console');
       var textP = document.getElementById('error-text');
       consoleDiv.style.display = 'block';
-      textP.textContent += '\n[Promise Rejection]: ' + (event.reason ? event.reason.stack || event.reason : 'Unknown');
+      textP.textContent += '\n\n[Promise Rejection]: ' + (event.reason ? event.reason.stack || event.reason : 'Unknown');
     });
   </script>
 
